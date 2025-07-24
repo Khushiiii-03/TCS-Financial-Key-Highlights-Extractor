@@ -1,6 +1,3 @@
-# pip install -r requirements.txt
-# streamlit run bfsihighlights_app.py
-
 import os
 import time
 import re
@@ -121,14 +118,13 @@ if st.button("Get Highlights"):
     chromedriver_autoinstaller.install()
 
     options = Options()
-    # Set Chrome binary location only on Render
-    if "RENDER" in os.environ:
-        options.binary_location = "/opt/render/project/src/.chromium-browser-snap/chrome-linux/chrome"
+    options.add_argument("--headless")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
 
-    options.add_argument('--headless')
-    options.add_argument('--disable-gpu')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
+    # ✅ Updated binary path to work on Render
+    options.binary_location = "/usr/bin/google-chrome"  # Adjust if needed
 
     try:
         driver = webdriver.Chrome(options=options)
