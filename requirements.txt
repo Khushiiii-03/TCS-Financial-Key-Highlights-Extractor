@@ -2,3 +2,6 @@ streamlit
 selenium
 pdfplumber
 requests
+python-docx
+reportlab
+
