@@ -4,4 +4,4 @@ pdfplumber
 requests
 python-docx
 reportlab
-
+chromedriver-autoinstaller
