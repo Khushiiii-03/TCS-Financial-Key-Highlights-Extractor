@@ -1,3 +1,5 @@
+git+https://github.com/adieuadieu/serverless-chrome.git@v1.0.0-55
+
 streamlit
 selenium
 pdfplumber
