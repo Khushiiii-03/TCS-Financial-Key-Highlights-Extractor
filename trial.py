@@ -83,11 +83,11 @@ if "selected_company" not in st.session_state:
 st.markdown("### Select Company:")
 
 logo_paths = {
-    "TCS": r"/Users/khushithakur/Downloads/HCLTECH/tcs.png",
-    "Tech Mahindra": r"/Users/khushithakur/Downloads/HCLTECH/techm.png",
-    "Mphasis": r"/Users/khushithakur/Downloads/HCLTECH/mphasis.png",
-    "Infosys": r"/Users/khushithakur/Downloads/HCLTECH/info.png",
-    "Zensar": r"/Users/khushithakur/Downloads/HCLTECH/zensar.png"
+    "TCS": r"assets/tcs.png",
+    "Tech Mahindra": rassets/techm.png",
+    "Mphasis": r"assets/mphasis.png",
+    "Infosys": r"assets/info.png",
+    "Zensar": r"assets/zensar.png"
 }
 
 cols = st.columns(len(logo_paths))
