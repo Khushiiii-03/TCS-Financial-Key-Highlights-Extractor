@@ -1,7 +1,6 @@
-# Use official lightweight Python image
 FROM python:3.10-slim
 
-# Install required system packages
+# Install system dependencies and Chrome + Chromedriver
 RUN apt-get update && apt-get install -y \
     wget \
     curl \
@@ -11,29 +10,28 @@ RUN apt-get update && apt-get install -y \
     libgconf-2-4 \
     libxss1 \
     libappindicator1 \
-    libindicator7 \
     fonts-liberation \
     libu2f-udev \
     xdg-utils \
     chromium \
-    chromium-driver
+    chromium-driver \
+ && rm -rf /var/lib/apt/lists/*
 
-# Set environment variables
+# Set environment variables for Chrome
 ENV CHROME_BIN=/usr/bin/chromium
 ENV CHROMEDRIVER_BIN=/usr/bin/chromedriver
 
-# Set workdir
+# Set working directory
 WORKDIR /app
 
-# Copy files
+# Copy all files to container
 COPY . .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose Streamlit port
+# Expose port
 EXPOSE 8501
 
-# Run Streamlit app
+# Start the Streamlit app
 CMD ["streamlit", "run", "zensar.py", "--server.port=8501", "--server.enableCORS=false"]
-
