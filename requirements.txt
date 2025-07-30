@@ -1,4 +1,5 @@
 streamlit
-selenium
-pdfplumber
 requests
+pdfplumber
+python-docx
+selenium
