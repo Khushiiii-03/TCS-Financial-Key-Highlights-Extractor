@@ -84,7 +84,7 @@ st.markdown("### Select Company:")
 
 logo_paths = {
     "TCS": r"assets/tcs.png",
-    "Tech Mahindra": rassets/techm.png",
+    "Tech Mahindra": r"assets/techm.png",
     "Mphasis": r"assets/mphasis.png",
     "Infosys": r"assets/info.png",
     "Zensar": r"assets/zensar.png"
