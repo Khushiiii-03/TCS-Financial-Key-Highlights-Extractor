@@ -1,32 +1,39 @@
-# Base image with Python and Chrome
+# Use official lightweight Python image
 FROM python:3.10-slim
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-
-# Install system dependencies
+# Install required system packages
 RUN apt-get update && apt-get install -y \
     wget \
-    unzip \
     curl \
+    unzip \
     gnupg \
-    chromium-driver \
-    chromium
+    libnss3 \
+    libgconf-2-4 \
+    libxss1 \
+    libappindicator1 \
+    libindicator7 \
+    fonts-liberation \
+    libu2f-udev \
+    xdg-utils \
+    chromium \
+    chromium-driver
 
-# Set display to avoid errors with headless Chrome
-ENV DISPLAY=:99
+# Set environment variables
+ENV CHROME_BIN=/usr/bin/chromium
+ENV CHROMEDRIVER_BIN=/usr/bin/chromedriver
 
-# Create app directory
+# Set workdir
 WORKDIR /app
-COPY . /app
+
+# Copy files
+COPY . .
 
 # Install Python dependencies
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Expose Streamlit port
 EXPOSE 8501
 
 # Run Streamlit app
-CMD ["streamlit", "run", "trial.py", "--server.port=8501", "--server.enableCORS=false"]
+CMD ["streamlit", "run", "zensar.py", "--server.port=8501", "--server.enableCORS=false"]
+
