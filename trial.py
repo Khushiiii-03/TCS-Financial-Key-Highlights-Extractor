@@ -467,13 +467,16 @@ def extract_persistent(fy_input, quarter_code):
         f"https://www.persistent.com/wp-content/uploads/{year_prefix}/{month}/Press-Release-{q_lower}{fy_suffix}.pdf"
     ]
 
-    headers = {'User-Agent': 'Mozilla/5.0'}
+    headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0 Safari/537.36"
+    }
+    
+    response = requests.get(url, headers=headers, timeout=15)
 
     for url in urls:
         try:
-            resp = requests.get(url, headers=headers, timeout=15)
-            if resp.status_code == 200:
-                with pdfplumber.open(BytesIO(resp.content)) as pdf:
+            if response.status_code == 200:
+                with pdfplumber.open(BytesIO(response.content)) as pdf:
                     full_text = "\n".join(
                         page.extract_text() or "" for page in pdf.pages
                     )
