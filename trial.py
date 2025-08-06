@@ -452,54 +452,44 @@ def extract_wipro(fiscal_year, quarter):
         return None, str(e)
 
 def extract_persistent(fy_input, quarter_code):
-    import logging
     quarter_month_map = {"Q1": "07", "Q2": "10", "Q3": "01", "Q4": "04"}
     month = quarter_month_map[quarter_code]
     q_lower = quarter_code.lower()
     q_upper = quarter_code.upper()
-    fy_suffix = f"fy{str(fy_input)[-2:]}"
+    fy_suffix = f"fy{str(fy_input)[-2:]}"      # e.g., fy26
+    fy_suffix_upper = fy_suffix.upper()        # e.g., FY26
+
     year_prefix = str(int(fy_input) - 1) if quarter_code in ["Q1", "Q2"] else str(fy_input)
 
+    # List of all actual patterns based on the URLs you gave
     urls = [
         f"https://www.persistent.com/wp-content/uploads/{year_prefix}/{month}/press-release-{q_lower}{fy_suffix}.pdf",
-        f"https://www.persistent.com/wp-content/uploads/{year_prefix}/{month}/Press-Release-{q_upper}{fy_suffix.upper()}.pdf",
         f"https://www.persistent.com/wp-content/uploads/{year_prefix}/{month}/press-release-{q_upper}{fy_suffix}.pdf",
-        f"https://www.persistent.com/wp-content/uploads/{year_prefix}/{month}/Press-Release-{q_lower}{fy_suffix}.pdf"
+        f"https://www.persistent.com/wp-content/uploads/{year_prefix}/{month}/Press-Release-{q_upper}{fy_suffix_upper}.pdf",
+        f"https://www.persistent.com/wp-content/uploads/{year_prefix}/{month}/Press-Release-{q_lower}{fy_suffix}.pdf",
+        f"https://www.persistent.com/wp-content/uploads/{year_prefix}/{month}/press-release-{q_lower}{fy_suffix_upper}.pdf",
+        f"https://www.persistent.com/wp-content/uploads/{year_prefix}/{month}/press-release-{q_upper}{fy_suffix_upper}.pdf"
     ]
-
-    headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0 Safari/537.36"
-    }
-    
-    response = requests.get(url, headers=headers, timeout=15)
 
     for url in urls:
         try:
-            if response.status_code == 200:
-                with pdfplumber.open(BytesIO(response.content)) as pdf:
-                    full_text = "\n".join(
-                        page.extract_text() or "" for page in pdf.pages
-                    )
-                if not full_text.strip():
-                    return ["⚠️ PDF fetched but text could not be extracted."], url
-
-                match = re.search(
-                    r'Banking, Financial Services & Insurance(.*?)Healthcare & Life Sciences',
-                    full_text,
-                    re.IGNORECASE | re.DOTALL,
-                )
+            resp = requests.get(url)
+            if resp.status_code == 200:
+                with pdfplumber.open(BytesIO(resp.content)) as pdf:
+                    full_text = "\n".join(page.extract_text() for page in pdf.pages if page.extract_text())
+                match = re.search(r'Banking, Financial Services & Insurance(.*?)Healthcare & Life Sciences', full_text, re.IGNORECASE | re.DOTALL)
                 if not match:
-                    return ["⚠️ BFSI section not found between headers."], url
+                    return ["⚠️ BFSI section not found between 'Banking, Financial Services & Insurance' and 'Healthcare & Life Sciences'."], url
 
-                section = re.sub(r'\s+', ' ', match.group(1)).replace("\\", ". ")
+                section = match.group(1).replace("\\", ". ")
                 sentences = re.split(r'(?<=[.!?])\s+', section.strip())
                 matches = [s.strip() for s in sentences if matches_keywords(s)]
                 return matches or ["⚠️ No matching BFSI-related sentences found."], url
-
         except Exception as e:
-            return None, f"❌ Error: {str(e)}"
+            return None, f"Error: {e}"
 
-    return None, f"❌ No valid PDF found for FY{fy_input}, {quarter_code}."
+    return None, f"⚠️ No valid PDF found for FY{fy_input}, {quarter_code}."
+
 
 def extract_cognizant(fy_input, quarter_code):
     BFSI_KEYWORDS = [
