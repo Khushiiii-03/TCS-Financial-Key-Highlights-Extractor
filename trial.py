@@ -22,9 +22,10 @@ def create_webdriver():
     return driver
 
 
-# Unified BFSI Highlights Extractor for TCS, Tech Mahindra, Mphasis, Zensar and Infosys 
+# TCS, Tech Mahindra, Mphasis, Zensar, Infosys, Wipro, Persistent, Cognizant
 #pip install requests pdfplumber streamlit selenium reportlab
 
+import base64
 import os
 import re
 import time
@@ -39,8 +40,24 @@ from selenium.webdriver.common.by import By
 
 # --- Streamlit Setup ---
 st.set_page_config(page_title="BFSI Highlights Extractor", layout="centered")
+logo_path = r"/Users/khushithakur/Downloads/HCLTECH/hcl.png"
 
 # Add background and box styling
+st.markdown(
+    f"""
+    <style>
+    .top-right-logo {{
+        position: fixed;
+        top: 70px;
+        right: 20px;
+        width: 140px;
+        z-index: 100;
+    }}
+    </style>
+    <img src="data:image/png;base64,{base64.b64encode(open(logo_path, "rb").read()).decode()}" class="top-right-logo">
+    """,
+    unsafe_allow_html=True
+)
 st.markdown(
     """
     <style>
@@ -55,8 +72,6 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
-
 background_url = "https://images.rawpixel.com/image_800/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDI0LTAyL3Jhd3BpeGVsX29mZmljZV8zNF9jbG9zZXVwX3Bob3RvX2JsYW5rX3Bvc3Rlcl9tb2NrdXB3aGl0ZV93YWxsY181ODljN2QxNi1kM2YwLTQyYTItOTQ4ZS1hYzc2M2UyMjNhNmRfMS5qcGc.jpg"
 st.markdown(
     f"""
@@ -73,37 +88,49 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
 st.title("BFSI Highlights Extractor")
+# --- Company Selection with Custom Dropdown-Like Logo Items ---
+def get_base64_image(path):
+    with open(path, "rb") as image_file:
+        encoded = base64.b64encode(image_file.read()).decode()
+        ext = os.path.splitext(path)[1][1:]  # e.g. 'png'
+        return f"data:image/{ext};base64,{encoded}"
 
-# --- Company Selection with Logos ---
-if "selected_company" not in st.session_state:
-    st.session_state.selected_company = None
-
-st.markdown("### Select Company:")
-
-logo_paths = {
-    "TCS": r"assets/tcs.png",
-    "Tech Mahindra": r"assets/techm.png",
-    "Mphasis": r"assets/mphasis.png",
-    "Infosys": r"assets/info.png",
-    "Zensar": r"assets/zensar.png"
+company_logos = {
+    "TCS": r"/Users/khushithakur/Downloads/HCLTECH/tcs.png",
+    "Tech Mahindra": r"/Users/khushithakur/Downloads/HCLTECH/techm.png",
+    "Mphasis": r"/Users/khushithakur/Downloads/HCLTECH/mphasis.png",
+    "Infosys": r"/Users/khushithakur/Downloads/HCLTECH/info.png",
+    "Zensar": r"/Users/khushithakur/Downloads/HCLTECH/zensar.png",
+    "Wipro": r"/Users/khushithakur/Downloads/HCLTECH/wipro.png",
+    "Persistent": r"/Users/khushithakur/Downloads/HCLTECH/persis.png",
+    "Cognizant": r"/Users/khushithakur/Downloads/HCLTECH/cog.png"
 }
 
-cols = st.columns(len(logo_paths))
-company_names = list(logo_paths.keys())
+# Create display names with logo using markdown HTML
+options = list(company_logos.keys())
+option_images = [f"<img src='{get_base64_image(company_logos[c])}' style='height:18px; vertical-align:middle;'> <span style='vertical-align:middle;'>{c}</span>" for c in options]
+company = st.selectbox("Select a company", options, index=0)
 
-for i, col in enumerate(cols):
-    with col:
-        st.image(logo_paths[company_names[i]], width=80)
-        if st.button(company_names[i]):
-            st.session_state.selected_company = company_names[i]
+# Show selected company logo
+logo_data = get_base64_image(company_logos[company])
+st.markdown(f"""
+<div style='display: flex; align-items: center;'>
+    <h2>Selected Company :</h2>
+    <img src='{logo_data}' style='height:100px; margin-right:8px;'>
+</div>
+""", unsafe_allow_html=True)
 
-if not st.session_state.selected_company:
-    st.warning("Please select a company above to continue.")
-    st.stop()
+# Save in session state
+st.session_state.selected_company = company
 
-company = st.session_state.selected_company
+st.markdown("""
+    <style>
+        .stRadio > div {
+            margin-top: -20px;  /* reduce gap under title */
+        }
+    </style>
+""", unsafe_allow_html=True)
 
 # --- Inputs ---
 if company == "Infosys":
@@ -121,6 +148,21 @@ elif company == "Zensar":
     fiscal_year = st.text_input("Enter Fiscal Year (e.g., 26 for FY26)")
     quarter_code = st.selectbox("Select Quarter", ["Q1", "Q2", "Q3", "Q4"])
     quarter_label = quarter_code  # Display as-is
+
+elif company == "Wipro":
+    fiscal_year = st.text_input("Enter Financial Year (e.g., 2025-2026)")
+    quarter_code = st.selectbox("Select Quarter", ["Q1", "Q2", "Q3", "Q4"])
+    quarter_label = quarter_code
+
+elif company == "Persistent":
+    fiscal_year = st.text_input("Enter Fiscal Year (e.g., 2026 for FY26):")
+    quarter_code = st.selectbox("Select Quarter", ["Q1", "Q2", "Q3", "Q4"])
+    quarter_label = quarter_code
+
+elif company == "Cognizant":
+    fiscal_year = st.text_input("Enter Fiscal Year (e.g., 2025 for FY25):")
+    quarter_code = st.selectbox("Select Quarter", ["Q1", "Q2", "Q3", "Q4"])
+    quarter_label = quarter_code
 
 else:
     fiscal_year = st.text_input("Enter Financial Year (e.g., 2025-26)")
@@ -146,7 +188,7 @@ keywords = [
     "investment", "finance", "financial", "asset management", "wealth management", "capital markets",
     "payments", "cards and payments", "brokerage", "trading", "fintech", "treasury", "insurer",
     "reinsurance", "reinsurer", "insurtech", "mortgage", "lender", "lending",
-    "custody and fund administration", "custodian"
+    "custody and fund administration", "custodian","debt"
 ]
 keywords_lower = [k.lower() for k in keywords]
 
@@ -354,11 +396,162 @@ def extract_zensar(fy_input, quarter_code):
 
     return matches, pdf_url
 
+import fitz  # PyMuPDF for Wipro
+
+def extract_wipro(fiscal_year, quarter):
+    quarters = {"Q1": "q1", "Q2": "q2", "Q3": "q3", "Q4": "q4"}
+    q_lower = quarters[quarter]
+    fy = fiscal_year.replace("-", "")
+    pdf_url = f"https://www.wipro.com/content/dam/nexus/en/investor/quarterly-results/{fiscal_year.lower()}/{q_lower}fy{fy[-2:]}/press-release-{q_lower}fy{fy[-2:]}.pdf"
+
+    try:
+        response = requests.get(pdf_url)
+        if response.status_code != 200:
+            return None, pdf_url
+        doc = fitz.open(stream=response.content, filetype="pdf")
+        full_text = "\n".join(page.get_text() for page in doc)
+        doc.close()
+
+        # Extract relevant section
+        start_patterns = [
+            r"(?i)Highlights of Strategic Deal Wins",
+            r"(?i)IT Services\s*[-–]\s*Large deals"
+        ]
+        end_patterns = [
+            r"(?i)Analyst Recognition",
+            r"(?i)About Key Metrics and Non-GAAP Financial Measures"
+        ]
+
+        start_match = next((re.search(p, full_text) for p in start_patterns if re.search(p, full_text)), None)
+        if not start_match:
+            return [], pdf_url
+        start_idx = start_match.end()
+
+        remaining_text = full_text[start_idx:]
+        end_match = next((re.search(p, remaining_text) for p in end_patterns if re.search(p, remaining_text)), None)
+        section = remaining_text[:end_match.start()] if end_match else remaining_text
+
+        # Break into sentences and clean
+        raw_sentences = re.split(r'(?<=[.?!])\s+(?=[A-Z])', section)
+        result_sentences = []
+        for sent in raw_sentences:
+            cleaned = sent.strip()
+            if re.match(r'^\s*\d{1,2}[\.\)]\s*$', cleaned):
+                continue
+            if not cleaned:
+                continue
+            cleaned = re.sub(r'^\s*\d{1,2}[\.\)]\s*', '', cleaned)
+            cleaned = re.sub(r'^[•\-]+\s*', '', cleaned)
+
+            if matches_keywords(cleaned):
+                result_sentences.append(cleaned)
+
+        return result_sentences, pdf_url
+
+    except Exception as e:
+        return None, str(e)
+
+def extract_persistent(fy_input, quarter_code):
+    quarter_month_map = {"Q1": "07", "Q2": "10", "Q3": "01", "Q4": "04"}
+    month = quarter_month_map[quarter_code]
+    q_lower = quarter_code.lower()
+    q_upper = quarter_code.upper()
+    fy_suffix = f"fy{str(fy_input)[-2:]}"
+    year_prefix = str(int(fy_input) - 1) if quarter_code in ["Q1", "Q2"] else str(fy_input)
+
+    urls = [
+        f"https://www.persistent.com/wp-content/uploads/{year_prefix}/{month}/press-release-{q_lower}{fy_suffix}.pdf",
+        f"https://www.persistent.com/wp-content/uploads/{year_prefix}/{month}/Press-Release-{q_upper}{fy_suffix.upper()}.pdf",
+        f"https://www.persistent.com/wp-content/uploads/{year_prefix}/{month}/press-release-{q_upper}{fy_suffix}.pdf",
+        f"https://www.persistent.com/wp-content/uploads/{year_prefix}/{month}/Press-Release-{q_lower}{fy_suffix}.pdf"
+    ]
+
+    for url in urls:
+        try:
+            resp = requests.get(url)
+            if resp.status_code == 200:
+                with pdfplumber.open(BytesIO(resp.content)) as pdf:
+                    full_text = "\n".join(page.extract_text() for page in pdf.pages if page.extract_text())
+                match = re.search(r'Banking, Financial Services & Insurance(.*?)Healthcare & Life Sciences', full_text, re.IGNORECASE | re.DOTALL)
+                if not match:
+                    return ["⚠️ BFSI section not found between 'Banking, Financial Services & Insurance' and 'Healthcare & Life Sciences'."], url
+
+                section = match.group(1).replace("\\", ". ")
+                sentences = re.split(r'(?<=[.!?])\s+', section.strip())
+                matches = [s.strip() for s in sentences if matches_keywords(s)]
+                return matches or ["⚠️ No matching BFSI-related sentences found."], url
+        except Exception as e:
+            return None, f"Error: {e}"
+
+    return None, f"No valid PDF found for FY{fy_input}, {quarter_code}."
+
+def extract_cognizant(fy_input, quarter_code):
+    BFSI_KEYWORDS = [
+        "bfsi", "bank", "banking", "insurance", "financial services", "securities", "retail",
+        "investment", "finance", "financial", "asset management", "wealth management", "capital markets",
+        "payments", "cards and payments", "brokerage", "trading", "fintech", "treasury", "insurer",
+        "reinsurance", "reinsurer", "insurtech", "mortgage", "lender", "lending",
+        "custody and fund administration", "custodian", "debt"
+    ]
+
+    quarter_map = {
+        "Q1": "q1", "Q2": "q2", "Q3": "q3", "Q4": "q4"
+    }
+    qstr = quarter_map[quarter_code]
+    fy_short = str(int(fy_input) % 100).zfill(2)
+
+    url = f"https://cognizant.q4cdn.com/123993165/files/doc_earnings/{fy_input}/{qstr}/earnings-result/{quarter_code}-{fy_short}-Earnings-Press-Release.pdf"
+    response = requests.get(url)
+    if response.status_code != 200:
+        return None, url
+
+    with pdfplumber.open(BytesIO(response.content)) as pdf:
+        text = "\n".join([page.extract_text() for page in pdf.pages if page.extract_text()])
+    text = re.sub(r'\s+', ' ', text)
+
+    start_patterns = [
+        r"(Client Announcements)",
+        r"(Client Wins)",
+        r"(Select Client and Partnership Announcements)"
+    ]
+    end_patterns = [
+        r"(Platform Enhancements and Partnerships)",
+        r"(Select Analyst Ratings, Company Recognition and Announcements)",
+        r"(Select Analyst Ratings and Company Recognition)"
+    ]
+
+    start_idx = -1
+    for pat in start_patterns:
+        m = re.search(pat, text, re.IGNORECASE)
+        if m:
+            start_idx = m.end()
+            break
+    if start_idx == -1:
+        return [], url
+
+    end_idx = len(text)
+    for pat in end_patterns:
+        m = re.search(pat, text[start_idx:], re.IGNORECASE)
+        if m:
+            end_idx = start_idx + m.start()
+            break
+
+    section = text[start_idx:end_idx]
+    chunks = re.split(r'•|\.\s+(?=[A-Z])', section)
+
+    matches = []
+    for chunk in chunks:
+        chunk = chunk.strip()
+        if any(re.search(rf'\b{re.escape(k)}\b', chunk, re.IGNORECASE) for k in BFSI_KEYWORDS):
+            matches.append(chunk)
+    return matches, url
+
+
 # --- Run Button ---
 if st.button("Get Highlights"):
     if not fiscal_year or \
-   (company == "Infosys" and not re.match(r'^\d{4}-\d{4}$', fiscal_year)) or \
-   (company not in ["Infosys", "Zensar"] and not re.match(r'^\d{4}-\d{2}$', fiscal_year)) or \
+   (company in ["Infosys", "Wipro"] and not re.match(r'^\d{4}-\d{4}$', fiscal_year)) or \
+   (company in ["TCS", "Tech Mahindra", "Mphasis"] and not re.match(r'^\d{4}-\d{2}$', fiscal_year)) or \
    (company == "Zensar" and not re.match(r'^\d{2}$', fiscal_year)):
         st.error("❌ Invalid fiscal year format.")
         st.stop()
@@ -374,6 +567,18 @@ if st.button("Get Highlights"):
         highlights, source_url = extract_infosys(fiscal_year, quarter_code)
     elif company == "Zensar":
         highlights, source_url = extract_zensar(fiscal_year, quarter_code)
+    elif company == "Wipro":
+        highlights, source_url = extract_wipro(fiscal_year, quarter_code)
+    elif company == "Persistent":
+        if not re.match(r'^\d{4}$', fiscal_year):
+            st.error("❌ Invalid fiscal year format for Persistent. Use e.g., 2026.")
+            st.stop()
+        highlights, source_url = extract_persistent(fiscal_year, quarter_code)
+    elif company == "Cognizant":
+        if not re.match(r'^\d{4}$', fiscal_year):
+            st.error("❌ Invalid fiscal year format for Cognizant. Use e.g., 2025.")
+            st.stop()
+        highlights, source_url = extract_cognizant(fiscal_year, quarter_code)
 
 
 
@@ -403,3 +608,4 @@ if st.button("Get Highlights"):
 
     else:
         st.warning("No BFSI-related highlights found.")
+
