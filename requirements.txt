@@ -1,5 +1,7 @@
 streamlit
 requests
 pdfplumber
-python-docx
 selenium
+python-docx
+PyMuPDF
+reportlab
