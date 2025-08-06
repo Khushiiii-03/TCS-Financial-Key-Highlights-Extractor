@@ -40,7 +40,7 @@ from selenium.webdriver.common.by import By
 
 # --- Streamlit Setup ---
 st.set_page_config(page_title="BFSI Highlights Extractor", layout="centered")
-logo_path = r"/Users/khushithakur/Downloads/HCLTECH/hcl.png"
+logo_path = os.path.join("assets", "hcl.png")
 
 # Add background and box styling
 st.markdown(
@@ -97,14 +97,14 @@ def get_base64_image(path):
         return f"data:image/{ext};base64,{encoded}"
 
 company_logos = {
-    "TCS": r"/Users/khushithakur/Downloads/HCLTECH/tcs.png",
-    "Tech Mahindra": r"/Users/khushithakur/Downloads/HCLTECH/techm.png",
-    "Mphasis": r"/Users/khushithakur/Downloads/HCLTECH/mphasis.png",
-    "Infosys": r"/Users/khushithakur/Downloads/HCLTECH/info.png",
-    "Zensar": r"/Users/khushithakur/Downloads/HCLTECH/zensar.png",
-    "Wipro": r"/Users/khushithakur/Downloads/HCLTECH/wipro.png",
-    "Persistent": r"/Users/khushithakur/Downloads/HCLTECH/persis.png",
-    "Cognizant": r"/Users/khushithakur/Downloads/HCLTECH/cog.png"
+    "TCS": os.path.join("assets", "tcs.png"),
+    "Tech Mahindra": os.path.join("assets", "techm.png"),
+    "Mphasis": os.path.join("assets", "mphasis.png"),
+    "Infosys": os.path.join("assets", "info.png"),
+    "Zensar": os.path.join("assets", "zensar.png"),
+    "Wipro": os.path.join("assets", "wipro.png"),
+    "Persistent": os.path.join("assets", "persis.png"),
+    "Cognizant": os.path.join("assets", "cog.png")
 }
 
 # Create display names with logo using markdown HTML
