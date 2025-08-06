@@ -450,7 +450,6 @@ def extract_wipro(fiscal_year, quarter):
 
     except Exception as e:
         return None, str(e)
-
 def extract_persistent(fy_input, quarter_code):
     quarter_month_map = {"Q1": "07", "Q2": "10", "Q3": "01", "Q4": "04"}
     month = quarter_month_map[quarter_code]
@@ -472,18 +471,28 @@ def extract_persistent(fy_input, quarter_code):
             if resp.status_code == 200:
                 with pdfplumber.open(BytesIO(resp.content)) as pdf:
                     full_text = "\n".join(page.extract_text() for page in pdf.pages if page.extract_text())
-                match = re.search(r'Banking, Financial Services & Insurance(.*?)Healthcare & Life Sciences', full_text, re.IGNORECASE | re.DOTALL)
+
+                # Extract BFSI section
+                match = re.search(
+                    r'Banking, Financial Services & Insurance(.*?)Healthcare & Life Sciences',
+                    full_text, re.IGNORECASE | re.DOTALL
+                )
+
                 if not match:
-                    return ["⚠️ BFSI section not found between 'Banking, Financial Services & Insurance' and 'Healthcare & Life Sciences'."], url
+                    continue  # Try next URL
 
-                section = match.group(1).replace("\\", ". ")
-                sentences = re.split(r'(?<=[.!?])\s+', section.strip())
+                section = match.group(1).replace("\\", " ").replace("..", ".").replace(" .", ".").strip()
+                sentences = re.split(r'(?<=[.!?])\s+', section)
+
                 matches = [s.strip() for s in sentences if matches_keywords(s)]
-                return matches or ["⚠️ No matching BFSI-related sentences found."], url
-        except Exception as e:
-            return None, f"Error: {e}"
 
-    return None, f"No valid PDF found for FY{fy_input}, {quarter_code}."
+                return matches or ["⚠️ No matching BFSI-related sentences found."], url
+
+        except Exception as e:
+            continue  # Skip to next URL on error
+
+    return ["⚠️ BFSI section not found or no valid PDF available."], None
+
 
 def extract_cognizant(fy_input, quarter_code):
     BFSI_KEYWORDS = [
