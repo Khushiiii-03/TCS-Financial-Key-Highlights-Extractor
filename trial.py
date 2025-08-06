@@ -450,7 +450,9 @@ def extract_wipro(fiscal_year, quarter):
 
     except Exception as e:
         return None, str(e)
+
 def extract_persistent(fy_input, quarter_code):
+    import logging
     quarter_month_map = {"Q1": "07", "Q2": "10", "Q3": "01", "Q4": "04"}
     month = quarter_month_map[quarter_code]
     q_lower = quarter_code.lower()
@@ -465,34 +467,36 @@ def extract_persistent(fy_input, quarter_code):
         f"https://www.persistent.com/wp-content/uploads/{year_prefix}/{month}/Press-Release-{q_lower}{fy_suffix}.pdf"
     ]
 
+    headers = {'User-Agent': 'Mozilla/5.0'}
+
     for url in urls:
         try:
-            resp = requests.get(url)
+            resp = requests.get(url, headers=headers, timeout=15)
             if resp.status_code == 200:
                 with pdfplumber.open(BytesIO(resp.content)) as pdf:
-                    full_text = "\n".join(page.extract_text() for page in pdf.pages if page.extract_text())
+                    full_text = "\n".join(
+                        page.extract_text() or "" for page in pdf.pages
+                    )
+                if not full_text.strip():
+                    return ["⚠️ PDF fetched but text could not be extracted."], url
 
-                # Extract BFSI section
                 match = re.search(
                     r'Banking, Financial Services & Insurance(.*?)Healthcare & Life Sciences',
-                    full_text, re.IGNORECASE | re.DOTALL
+                    full_text,
+                    re.IGNORECASE | re.DOTALL,
                 )
-
                 if not match:
-                    continue  # Try next URL
+                    return ["⚠️ BFSI section not found between headers."], url
 
-                section = match.group(1).replace("\\", " ").replace("..", ".").replace(" .", ".").strip()
-                sentences = re.split(r'(?<=[.!?])\s+', section)
-
+                section = re.sub(r'\s+', ' ', match.group(1)).replace("\\", ". ")
+                sentences = re.split(r'(?<=[.!?])\s+', section.strip())
                 matches = [s.strip() for s in sentences if matches_keywords(s)]
-
                 return matches or ["⚠️ No matching BFSI-related sentences found."], url
 
         except Exception as e:
-            continue  # Skip to next URL on error
+            return None, f"❌ Error: {str(e)}"
 
-    return ["⚠️ BFSI section not found or no valid PDF available."], None
-
+    return None, f"❌ No valid PDF found for FY{fy_input}, {quarter_code}."
 
 def extract_cognizant(fy_input, quarter_code):
     BFSI_KEYWORDS = [
